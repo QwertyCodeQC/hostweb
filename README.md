@@ -1,4 +1,4 @@
-<center><img src="https://raw.githubusercontent.com/QwertyCodeQC/hostweb/refs/heads/main/hostweb-light.png" width="500"></center>
+<center><img src="https://raw.githubusercontent.com/QwertyCodeQC/hostweb/refs/heads/main/hostweb-dark.png" width="500"></center>
 <center><h1>HostWeb</h1></center>
 <center>Simple localhost server with presets</center>
 

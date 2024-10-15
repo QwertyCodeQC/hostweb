@@ -48,6 +48,11 @@ class HWBuilder {
         }
         fileStructure["#"] = result;
         const hwContent = JSON.stringify(fileStructure, null, 2);
+        if (!fs.existsSync(path.dirname(outputFilePath))) {
+            if (debug)
+                consola.debug('Creating output directory...');
+            fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+        }
         if (gzip) {
             const tempFilePath = temp.path({ suffix: '.hw' });
             fs.writeFileSync(tempFilePath, hwContent);

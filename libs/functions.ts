@@ -7,7 +7,7 @@ import showdown from "showdown";
 import express from 'express';
 import chalk from "chalk";
 import { Server } from "http";
-import { parse, stringify} from "ini";
+import { parse, stringify } from "ini";
 import { dirname, filename } from 'dirname-filename-esm';
 import { glob } from 'glob';
 import { HWBuilder } from '#classes';
@@ -77,48 +77,85 @@ export async function serve(filename: string, raw: boolean) {
             break;
 
         case '.hw':  // Handle custom .hw (hostweb) files
-            let filepath: string;
-            if (isGzipFile(filename)) {  // If the file is Gzipped
-                filepath = temp.path({ suffix: '.hwunpacked' });  // Create a temporary file to hold unpacked content
-                try {
-                    await decompressGzipFile(filename, filepath);  // Decompress the file into the temp path
-                } catch (error) {
-                    consola.error('Error during decompression:', error);  // Log errors during decompression
-                    return;
+            if (!raw) {
+                let filepath: string;
+                if (isGzipFile(filename)) {  // If the file is Gzipped
+                    filepath = temp.path({ suffix: '.hwunpacked' });  // Create a temporary file to hold unpacked content
+                    try {
+                        await decompressGzipFile(filename, filepath);  // Decompress the file into the temp path
+                    } catch (error) {
+                        consola.error('Error during decompression:', error);  // Log errors during decompression
+                        return;
+                    }
+                } else {
+                    filepath = filename;  // If not Gzipped, use the original file path
                 }
+
+                const config = JSON.parse(fs.readFileSync(filepath, 'utf8'));  // Read the JSON content of the .hw file
+
+                // Serve dynamic routes from the .hw configuration
+                app.get("/", (req: Request, res: Response) => {
+                    if (config['#'] && config['#']['index.html']) {
+                        res.setHeader('Content-Type', 'text/html');  // Set the content type to HTML
+                        res.send(config['#']['index.html'].content);  // Serve the index.html content
+                    } else {
+                        res.status(404).send('Index.html not found in .hw file');  // Return 404 if not found
+                    }
+                });
+
+
+                Object.keys(config['#']).forEach((route) => {
+                    let routePath: string;
+                
+                    // Sprawdzenie, czy mamy plik index.html w głównym folderze lub w podfolderach
+                    if (route.toLowerCase() === "index.html" || route.toLowerCase() === "index.htm") {
+                        routePath = "/";  // Główna ścieżka
+                    } else if (route.endsWith('/index.html') || route.endsWith('/index.htm')) {
+                        // Jeśli mamy plik "index.html" w folderze, tworzymy odpowiednią trasę
+                        routePath = `/${route.replace('/index.html', '').replace('/index.htm', '')}`;
+                    } else {
+                        // Zachowujemy rozszerzenie .html w nazwie pliku
+                        routePath = `/${route}`;
+                    } 
+                
+                    app.get(routePath, (req: Request, res: Response) => {
+                        if (config['#'][route] && config['#'][route].content) {
+                            res.setHeader('Content-Type', 'text/html');
+                            res.send(config['#'][route].content);
+                        } else {
+                            res.status(404).send(`${route} not found in .hw file`);
+                        }
+                    });
+                });
+                
+
+                // Serve static assets from the .assets directory
+                app.get('/.assets/:file', (req: Request, res: Response) => {
+                    const requestedAsset = req.params.file;
+                    if (config.assets && config.assets[requestedAsset]) {
+                        res.setHeader('Content-Type', getContentType(requestedAsset));  // Set the appropriate content type
+                        res.send(config.assets[requestedAsset].content);  // Serve the asset content
+                    } else {
+                        res.status(404).send('Asset not found');  // Return 404 if the asset is not found
+                    }
+                });
             } else {
-                filepath = filename;  // If not Gzipped, use the original file path
+                content = fs.readFileSync(filename, 'utf8');  // Simply read the file content
             }
-
-            const config = JSON.parse(fs.readFileSync(filepath, 'utf8'));  // Read the JSON content of the .hw file
-
-            // Serve dynamic routes from the .hw configuration
-            app.get("/", (req: Request, res: Response) => {
-                if (config['#'] && config['#']['index.html']) {
-                    res.setHeader('Content-Type', 'text/html');  // Set the content type to HTML
-                    res.send(config['#']['index.html'].content);  // Serve the index.html content
-                } else {
-                    res.status(404).send('Index.html not found in .hw file');  // Return 404 if not found
-                }
-            });
-
-            // Serve static assets from the .assets directory
-            app.get('/.assets/:file', (req: Request, res: Response) => {
-                const requestedAsset = req.params.file;
-                if (config.assets && config.assets[requestedAsset]) {
-                    res.setHeader('Content-Type', getContentType(requestedAsset));  // Set the appropriate content type
-                    res.send(config.assets[requestedAsset].content);  // Serve the asset content
-                } else {
-                    res.status(404).send('Asset not found');  // Return 404 if the asset is not found
-                }
-            });
 
             break;
 
         default:  // Default case for all other file types
             content = fs.readFileSync(filename, 'utf8');  // Simply read the file content
     }
-
+    if (extension != '.hw' || (extension == '.hw' && raw)) {
+        app.get('/', (req: Request, res: Response) => {
+            if (raw) {
+                res.setHeader('Content-Type', 'text/plain');  // Set the content type to plain text
+            } // Set the content type to HTM
+            res.send(content);  // Serve the content
+        });
+    }
     // Start the Express server
     app.set('view engine', 'ejs');  // Set the view engine to EJS
     app.set('views', path.resolve(path.join(path.dirname(__dirname), 'htmls')));  // Set the views directory
@@ -153,7 +190,7 @@ export async function create(projname: string) {
             }
         }
     }
-    if (fs.existsSync(projname)) {
+    if (fs.existsSync(projname) && projname != '.') {
         consola.error(`Directory already exists: ${projname}`);
         process.exit(0);
     }
@@ -179,7 +216,7 @@ Welcome in ${projname} project!
     fs.writeFileSync(path.join(projname, '.hostwebrc'), stringify({
         file: "hostwebrc",
         config: {
-            name: projname,
+            name: projname == '.' ? path.basename(process.cwd()) : projname, 
             build: {
                 type: "classic",
                 usegzip: true
@@ -193,6 +230,7 @@ Welcome in ${projname} project!
 }
 
 export async function build(out: string, debug: boolean) {
+    let config: any;
     consola.level = debug ? LogLevels.debug : LogLevels.info;
     if (debug) consola.debug('Debug mode enabled!');
     consola.start('Invoked project build...');
@@ -202,17 +240,16 @@ export async function build(out: string, debug: boolean) {
         process.exit(0);
     }
     try {
-        const config = parse(fs.readFileSync('./.hostwebrc', 'utf8'));
+        config = parse(fs.readFileSync('./.hostwebrc', 'utf8'));
         if (debug) consola.debug('Invoking HWBuilder...');
         const hwb = new HWBuilder();
         hwb.createHWFile(process.cwd(), path.join(out, config.config.name + '.hw'), config.config.ignore, config.config.build.usegzip, debug);
-
     } catch (error) {
         consola.error(error);
         process.exit(0);
     }
     consola.success(chalk.green('Project builded successfully! 🎉'));
-    consola.info('Check it out by running: ' + chalk.blueBright(`hostweb serve ./${out}/${parse(fs.readFileSync('./.hostwebrc', 'utf8')).config.name}.hw`));
+    consola.info('Check it out by running: ' + chalk.blueBright(`hostweb serve ./${out}/${config.config.name}.hw`)); 
 }
 
 export function isGzipFile(filePath: string) {

@@ -1,9 +1,13 @@
 {
   "name": "hostweb",
-  "version": "1.0.4",
+  "version": "1.0.14",
   "description": "Simple localhost server with presets",
   "main": "hostweb.js",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QwertyCodeQC/hostweb.git"
+  },
   "scripts": {
     "test": "echo"
   },
@@ -35,7 +39,7 @@
     "ejs": "^3.1.10",
     "express": "^4.21.1",
     "glob": "^11.0.0",
-    "hostweb": "1.0.4",
+    "hostweb": "file:",
     "ini": "^5.0.0",
     "showdown": "^2.1.0",
     "temp": "^0.9.4"

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const _version = "1.0.0";
+const _version = "1.0.14";
 import { Command } from "commander";
 import { serve, create, build } from "#functions";
 const program = new Command();

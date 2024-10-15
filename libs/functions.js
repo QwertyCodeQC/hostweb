@@ -68,43 +68,77 @@ export async function serve(filename, raw) {
             content = fs.readFileSync(filename, 'utf8');
             break;
         case '.hw':
-            let filepath;
-            if (isGzipFile(filename)) {
-                filepath = temp.path({ suffix: '.hwunpacked' });
-                try {
-                    await decompressGzipFile(filename, filepath);
+            if (!raw) {
+                let filepath;
+                if (isGzipFile(filename)) {
+                    filepath = temp.path({ suffix: '.hwunpacked' });
+                    try {
+                        await decompressGzipFile(filename, filepath);
+                    }
+                    catch (error) {
+                        consola.error('Error during decompression:', error);
+                        return;
+                    }
                 }
-                catch (error) {
-                    consola.error('Error during decompression:', error);
-                    return;
+                else {
+                    filepath = filename;
                 }
+                const config = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+                app.get("/", (req, res) => {
+                    if (config['#'] && config['#']['index.html']) {
+                        res.setHeader('Content-Type', 'text/html');
+                        res.send(config['#']['index.html'].content);
+                    }
+                    else {
+                        res.status(404).send('Index.html not found in .hw file');
+                    }
+                });
+                Object.keys(config['#']).forEach((route) => {
+                    let routePath;
+                    if (route.toLowerCase() === "index.html" || route.toLowerCase() === "index.htm") {
+                        routePath = "/";
+                    }
+                    else if (route.endsWith('/index.html') || route.endsWith('/index.htm')) {
+                        routePath = `/${route.replace('/index.html', '').replace('/index.htm', '')}`;
+                    }
+                    else {
+                        routePath = `/${route}`;
+                    }
+                    app.get(routePath, (req, res) => {
+                        if (config['#'][route] && config['#'][route].content) {
+                            res.setHeader('Content-Type', 'text/html');
+                            res.send(config['#'][route].content);
+                        }
+                        else {
+                            res.status(404).send(`${route} not found in .hw file`);
+                        }
+                    });
+                });
+                app.get('/.assets/:file', (req, res) => {
+                    const requestedAsset = req.params.file;
+                    if (config.assets && config.assets[requestedAsset]) {
+                        res.setHeader('Content-Type', getContentType(requestedAsset));
+                        res.send(config.assets[requestedAsset].content);
+                    }
+                    else {
+                        res.status(404).send('Asset not found');
+                    }
+                });
             }
             else {
-                filepath = filename;
+                content = fs.readFileSync(filename, 'utf8');
             }
-            const config = JSON.parse(fs.readFileSync(filepath, 'utf8'));
-            app.get("/", (req, res) => {
-                if (config['#'] && config['#']['index.html']) {
-                    res.setHeader('Content-Type', 'text/html');
-                    res.send(config['#']['index.html'].content);
-                }
-                else {
-                    res.status(404).send('Index.html not found in .hw file');
-                }
-            });
-            app.get('/.assets/:file', (req, res) => {
-                const requestedAsset = req.params.file;
-                if (config.assets && config.assets[requestedAsset]) {
-                    res.setHeader('Content-Type', getContentType(requestedAsset));
-                    res.send(config.assets[requestedAsset].content);
-                }
-                else {
-                    res.status(404).send('Asset not found');
-                }
-            });
             break;
         default:
             content = fs.readFileSync(filename, 'utf8');
+    }
+    if (extension != '.hw' || (extension == '.hw' && raw)) {
+        app.get('/', (req, res) => {
+            if (raw) {
+                res.setHeader('Content-Type', 'text/plain');
+            }
+            res.send(content);
+        });
     }
     app.set('view engine', 'ejs');
     app.set('views', path.resolve(path.join(path.dirname(__dirname), 'htmls')));
@@ -136,7 +170,7 @@ export async function create(projname) {
             }
         }
     }
-    if (fs.existsSync(projname)) {
+    if (fs.existsSync(projname) && projname != '.') {
         consola.error(`Directory already exists: ${projname}`);
         process.exit(0);
     }
@@ -162,7 +196,7 @@ Welcome in ${projname} project!
     fs.writeFileSync(path.join(projname, '.hostwebrc'), stringify({
         file: "hostwebrc",
         config: {
-            name: projname,
+            name: projname == '.' ? path.basename(process.cwd()) : projname,
             build: {
                 type: "classic",
                 usegzip: true
@@ -175,6 +209,7 @@ Welcome in ${projname} project!
     consola.success('Project created successfully! 🎉');
 }
 export async function build(out, debug) {
+    let config;
     consola.level = debug ? LogLevels.debug : LogLevels.info;
     if (debug)
         consola.debug('Debug mode enabled!');
@@ -186,7 +221,7 @@ export async function build(out, debug) {
         process.exit(0);
     }
     try {
-        const config = parse(fs.readFileSync('./.hostwebrc', 'utf8'));
+        config = parse(fs.readFileSync('./.hostwebrc', 'utf8'));
         if (debug)
             consola.debug('Invoking HWBuilder...');
         const hwb = new HWBuilder();
@@ -197,7 +232,7 @@ export async function build(out, debug) {
         process.exit(0);
     }
     consola.success(chalk.green('Project builded successfully! 🎉'));
-    consola.info('Check it out by running: ' + chalk.blueBright(`hostweb serve ./${out}/${parse(fs.readFileSync('./.hostwebrc', 'utf8')).config.name}.hw`));
+    consola.info('Check it out by running: ' + chalk.blueBright(`hostweb serve ./${out}/${config.config.name}.hw`));
 }
 export function isGzipFile(filePath) {
     const buffer = Buffer.alloc(2);

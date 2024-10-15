@@ -65,7 +65,10 @@ class HWBuilder {
 
         // Zapisanie struktury jako JSON do pliku tymczasowego
         const hwContent = JSON.stringify(fileStructure, null, 2);
-
+        if (!fs.existsSync(path.dirname(outputFilePath))) {
+            if (debug) consola.debug('Creating output directory...');
+            fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
+        }
         // Jeśli gzip = true, kompresujemy plik i zapisujemy w katalogu wyjściowym
         if (gzip) {
             const tempFilePath = temp.path({ suffix: '.hw' });
