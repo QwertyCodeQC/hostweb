@@ -3,4 +3,4 @@
 node_modules
 publish.js
 publish.ts
-**/*.js
+*.js
