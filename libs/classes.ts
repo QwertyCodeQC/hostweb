@@ -4,6 +4,8 @@ import { glob } from 'glob';
 import { createGzip } from 'zlib'; // Zlib do kompresji
 import temp from 'temp'; // Zależność do obsługi plików tymczasowych
 import consola from 'consola';
+import { minify } from 'minify';
+
 
 class HWBuilder {
     constructor() {
@@ -11,25 +13,51 @@ class HWBuilder {
     }
 
     // Funkcja przeszukująca wszystkie pliki, wykluczając ręcznie pliki na podstawie `exclude`
-    buildFileStructure(dirPath: string, exclude: string[] = []): any {
+    async buildFileStructure(dirPath: string, exclude: string[] = [], doMinify: boolean): Promise<any> {
         const structure: any = {};
-        const pattern = `${dirPath}/**/*`; // Wzorzec glob do wyszukiwania wszystkich plików i katalogów
-        const items = glob.sync(pattern, { nodir: false });
-
-        items.forEach((fullPath: string) => {
+        const supportedExtensions = ['.js', '.css', '.html', '.htm', '.json'];  // Obsługiwane rozszerzenia
+        const items = glob.sync(`${dirPath}/**/*`, { nodir: false });
+    
+        console.log(`Znaleziono pliki: ${items.length}`); // Sprawdzenie liczby plików
+    
+        for (const fullPath of items) {
             let relativePath = path.relative(dirPath, fullPath).replace(/\\/g, '/'); // Zamiana na ukośniki
             const stats = fs.statSync(fullPath);
-
+    
             // Sprawdź, czy plik/katalog nie znajduje się w liście wykluczeń
             if (!exclude.includes(relativePath) && stats.isFile()) {
-                structure[relativePath] = {
-                    content: fs.readFileSync(fullPath, 'utf-8') // Zapisujemy zawartość pliku
-                };
+                const ext = path.extname(fullPath).toLowerCase();
+                const fileContent = fs.readFileSync(fullPath, 'utf-8'); // Odczytaj zawartość pliku
+                
+                // Logowanie ścieżek plików
+                console.log(`Dodawanie pliku: ${relativePath}`);
+    
+                // Sprawdzamy, czy plik ma rozszerzenie obsługiwane do minifikacji
+                if (supportedExtensions.includes(ext) && doMinify) {
+                    try {
+                        // Minifikujemy przekazując ścieżkę do pliku
+                        const minifiedContent = await minify(fullPath);
+                        structure[relativePath] = {
+                            content: minifiedContent,  // Zapisujemy zminifikowaną zawartość
+                        };
+                    } catch (error) {
+                        console.error(`Błąd podczas minifikacji pliku ${fullPath}:`, error);
+                    }
+                } else {
+                    // Zapisujemy zawartość pliku bez minifikacji, jeśli rozszerzenie nie jest wspierane
+                    structure[relativePath] = {
+                        content: fileContent,
+                    };
+                }
             }
-        });
-
+        }
+    
+        console.log(`Struktura wygenerowana: ${JSON.stringify(structure, null, 2)}`); // Logowanie struktury
+    
         return structure;
     }
+    
+
 
     // Funkcja do kompresji Gzip
     compressFile(inputPath: string, outputPath: string): Promise<void> {
@@ -42,7 +70,7 @@ class HWBuilder {
         });
     }
 
-    async createHWFile(projectDir: string, outputFilePath: string, excludeFolders: string[] = [], gzip: boolean, debug: boolean) {
+    async createHWFile(projectDir: string, outputFilePath: string, excludeFolders: string[] = [], gzip: boolean, debug: boolean, doMinify: boolean) {
         if (debug) consola.debug('Creating filemap...');
         const srcDir = path.join(projectDir, 'src');  // Skupiamy się na katalogu 'src'
         const fileStructure: any = {
@@ -51,13 +79,13 @@ class HWBuilder {
         };
 
         // Przeszukiwanie katalogu 'src' i wykluczanie ręcznie podanych plików/folderów
-        const result = this.buildFileStructure(srcDir, excludeFolders);
+        const result = await this.buildFileStructure(srcDir, excludeFolders, doMinify);
 
         // Dodaj folder `assets`, jeśli istnieje
         const assetsDir = path.join(srcDir, '.assets');
         if (fs.existsSync(assetsDir)) {
             if (debug) consola.debug('Adding assets...');
-            fileStructure["assets"] = this.buildFileStructure(assetsDir, excludeFolders);
+            fileStructure["assets"] = await this.buildFileStructure(assetsDir, excludeFolders, doMinify);
         }
 
         // Przenosimy wynik do struktury pliku .hw

@@ -24,11 +24,11 @@ export async function serve(filename: string, raw: boolean) {
     if (raw) {
         consola.info('Using raw mode. Formatting disabled.');  // Notify the user that raw mode is used
     }
-    consola.start(`Invoking server for "${filename}"...`);  // Start server notification
+    consola.start(`Invoking server for "${path.resolve(filename)}"...`);  // Start server notification
 
     // Check if the file exists
     if (!fs.existsSync(filename) || !fs.statSync(filename).isFile()) {
-        consola.error(`This is not a file or it doesn't exist: ${filename}`);  // If the file is not found, log the error and return
+        consola.error(`This is not a file or it doesn't exist: ${path.resolve(filename)}`);  // If the file is not found, log the error and return
         return;
     }
 
@@ -219,7 +219,8 @@ Welcome in ${projname} project!
             name: projname == '.' ? path.basename(process.cwd()) : projname, 
             build: {
                 type: "classic",
-                usegzip: true
+                usegzip: true,
+                minify: true
             },
             ignore: [
                 "README.md"
@@ -243,7 +244,7 @@ export async function build(out: string, debug: boolean) {
         config = parse(fs.readFileSync('./.hostwebrc', 'utf8'));
         if (debug) consola.debug('Invoking HWBuilder...');
         const hwb = new HWBuilder();
-        hwb.createHWFile(process.cwd(), path.join(out, config.config.name + '.hw'), config.config.ignore, config.config.build.usegzip, debug);
+        hwb.createHWFile(process.cwd(), path.join(out, config.config.name + '.hw'), config.config.ignore, config.config.build.usegzip, debug, config.config.build.minify);
     } catch (error) {
         consola.error(error);
         process.exit(0);

@@ -1,7 +1,12 @@
 #!/usr/bin/env node
-const _version = "1.0.14";
 import { Command } from "commander";
 import { serve, create, build } from "#functions";
+import fs from "fs";
+import { dirname, filename } from "dirname-filename-esm";
+import path from "path";
+const __dirname = dirname(import.meta);
+const __filename = filename(import.meta);
+const _version = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8")).version;
 const program = new Command();
 program
     .name("hostweb")

@@ -1,3 +1,5 @@
 .npmignore
 .vscode
 node_modules
+publish.js
+publish.ts

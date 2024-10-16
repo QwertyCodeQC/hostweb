@@ -1,2 +1,4 @@
 .vscode
 .gitignore
+publish.ts
+publish.js

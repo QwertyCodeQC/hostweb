@@ -1,6 +1,6 @@
 {
   "name": "hostweb",
-  "version": "1.0.14",
+  "version": "1.1.0",
   "description": "Simple localhost server with presets",
   "main": "hostweb.js",
   "type": "module",
@@ -12,7 +12,7 @@
     "test": "echo"
   },
   "bin": {
-    "hostweb": "./hostweb.js"
+    "hostweb": "hostweb.js"
   },
   "keywords": [
     "localhost",
@@ -41,14 +41,18 @@
     "glob": "^11.0.0",
     "hostweb": "file:",
     "ini": "^5.0.0",
+    "minify": "^11.4.1",
     "showdown": "^2.1.0",
     "temp": "^0.9.4"
   },
   "devDependencies": {
+    "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.0",
     "@types/ini": "^4.1.1",
+    "@types/minify": "^9.1.4",
     "@types/node": "^22.7.5",
     "@types/showdown": "^2.0.6",
-    "@types/temp": "^0.9.4"
+    "@types/temp": "^0.9.4",
+    "@types/try-to-catch": "^3.0.3"
   }
 }

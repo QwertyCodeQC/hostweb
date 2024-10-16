@@ -21,9 +21,9 @@ export async function serve(filename, raw) {
     if (raw) {
         consola.info('Using raw mode. Formatting disabled.');
     }
-    consola.start(`Invoking server for "${filename}"...`);
+    consola.start(`Invoking server for "${path.resolve(filename)}"...`);
     if (!fs.existsSync(filename) || !fs.statSync(filename).isFile()) {
-        consola.error(`This is not a file or it doesn't exist: ${filename}`);
+        consola.error(`This is not a file or it doesn't exist: ${path.resolve(filename)}`);
         return;
     }
     const app = express();
@@ -199,7 +199,8 @@ Welcome in ${projname} project!
             name: projname == '.' ? path.basename(process.cwd()) : projname,
             build: {
                 type: "classic",
-                usegzip: true
+                usegzip: true,
+                minify: true
             },
             ignore: [
                 "README.md"
@@ -225,7 +226,7 @@ export async function build(out, debug) {
         if (debug)
             consola.debug('Invoking HWBuilder...');
         const hwb = new HWBuilder();
-        hwb.createHWFile(process.cwd(), path.join(out, config.config.name + '.hw'), config.config.ignore, config.config.build.usegzip, debug);
+        hwb.createHWFile(process.cwd(), path.join(out, config.config.name + '.hw'), config.config.ignore, config.config.build.usegzip, debug, config.config.build.minify);
     }
     catch (error) {
         consola.error(error);

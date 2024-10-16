@@ -4,23 +4,42 @@ import { glob } from 'glob';
 import { createGzip } from 'zlib';
 import temp from 'temp';
 import consola from 'consola';
+import { minify } from 'minify';
 class HWBuilder {
     constructor() {
         temp.track();
     }
-    buildFileStructure(dirPath, exclude = []) {
+    async buildFileStructure(dirPath, exclude = [], doMinify) {
         const structure = {};
-        const pattern = `${dirPath}/**/*`;
-        const items = glob.sync(pattern, { nodir: false });
-        items.forEach((fullPath) => {
+        const supportedExtensions = ['.js', '.css', '.html', '.htm', '.json'];
+        const items = glob.sync(`${dirPath}/**/*`, { nodir: false });
+        console.log(`Znaleziono pliki: ${items.length}`);
+        for (const fullPath of items) {
             let relativePath = path.relative(dirPath, fullPath).replace(/\\/g, '/');
             const stats = fs.statSync(fullPath);
             if (!exclude.includes(relativePath) && stats.isFile()) {
-                structure[relativePath] = {
-                    content: fs.readFileSync(fullPath, 'utf-8')
-                };
+                const ext = path.extname(fullPath).toLowerCase();
+                const fileContent = fs.readFileSync(fullPath, 'utf-8');
+                console.log(`Dodawanie pliku: ${relativePath}`);
+                if (supportedExtensions.includes(ext) && doMinify) {
+                    try {
+                        const minifiedContent = await minify(fullPath);
+                        structure[relativePath] = {
+                            content: minifiedContent,
+                        };
+                    }
+                    catch (error) {
+                        console.error(`Błąd podczas minifikacji pliku ${fullPath}:`, error);
+                    }
+                }
+                else {
+                    structure[relativePath] = {
+                        content: fileContent,
+                    };
+                }
             }
-        });
+        }
+        console.log(`Struktura wygenerowana: ${JSON.stringify(structure, null, 2)}`);
         return structure;
     }
     compressFile(inputPath, outputPath) {
@@ -31,7 +50,7 @@ class HWBuilder {
             input.pipe(gzip).pipe(output).on('finish', resolve).on('error', reject);
         });
     }
-    async createHWFile(projectDir, outputFilePath, excludeFolders = [], gzip, debug) {
+    async createHWFile(projectDir, outputFilePath, excludeFolders = [], gzip, debug, doMinify) {
         if (debug)
             consola.debug('Creating filemap...');
         const srcDir = path.join(projectDir, 'src');
@@ -39,12 +58,12 @@ class HWBuilder {
             "$filetype": "hostweb.pack",
             "#": {}
         };
-        const result = this.buildFileStructure(srcDir, excludeFolders);
+        const result = await this.buildFileStructure(srcDir, excludeFolders, doMinify);
         const assetsDir = path.join(srcDir, '.assets');
         if (fs.existsSync(assetsDir)) {
             if (debug)
                 consola.debug('Adding assets...');
-            fileStructure["assets"] = this.buildFileStructure(assetsDir, excludeFolders);
+            fileStructure["assets"] = await this.buildFileStructure(assetsDir, excludeFolders, doMinify);
         }
         fileStructure["#"] = result;
         const hwContent = JSON.stringify(fileStructure, null, 2);
