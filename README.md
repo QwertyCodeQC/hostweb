@@ -56,16 +56,16 @@ hostweb build -o dist --debug
 It looks like this
 
 ``` ini
-file=hostwebrc
+file=hostwebrc ; DO NOT CHANGE
 
 [config]
-ignore[]=README.md
+ignore[]=README.md ; Ignore files in src
 
 [config.build]
-type=classic
-usegzip=true
+type=classic ; Classic build
+usegzip=true ; Enable gzip (disable for debugging)
+minify=true ; Enable minification for files (it not affects visuals)
 ```
-I this there's nothing to explain...
 
 <hr>
 
