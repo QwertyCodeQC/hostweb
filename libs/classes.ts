@@ -18,8 +18,6 @@ class HWBuilder {
         const supportedExtensions = ['.js', '.css', '.html', '.htm', '.json'];  // Obsługiwane rozszerzenia
         const items = glob.sync(`${dirPath}/**/*`, { nodir: false });
     
-        console.log(`Znaleziono pliki: ${items.length}`); // Sprawdzenie liczby plików
-    
         for (const fullPath of items) {
             let relativePath = path.relative(dirPath, fullPath).replace(/\\/g, '/'); // Zamiana na ukośniki
             const stats = fs.statSync(fullPath);
@@ -41,7 +39,7 @@ class HWBuilder {
                             content: minifiedContent,  // Zapisujemy zminifikowaną zawartość
                         };
                     } catch (error) {
-                        console.error(`Błąd podczas minifikacji pliku ${fullPath}:`, error);
+                        consola.error(error);
                     }
                 } else {
                     // Zapisujemy zawartość pliku bez minifikacji, jeśli rozszerzenie nie jest wspierane
@@ -52,7 +50,6 @@ class HWBuilder {
             }
         }
     
-        console.log(`Struktura wygenerowana: ${JSON.stringify(structure, null, 2)}`); // Logowanie struktury
     
         return structure;
     }
