@@ -66,6 +66,7 @@ type=classic ; Classic build
 usegzip=true ; Enable gzip (disable for debugging)
 minify=true ; Enable minification for files (it not affects visuals)
 ```
+I this there's nothing to explain...
 
 <hr>
 
