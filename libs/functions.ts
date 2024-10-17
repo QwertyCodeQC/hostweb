@@ -19,7 +19,7 @@ import { pipeline } from 'stream';
 const __dirname = dirname(import.meta);
 const __filename = filename(import.meta);
 export async function serve(filename: string, raw: boolean) {
-    let content: string = '';
+    let content: string | Buffer = '';
     const extension = path.extname(filename).toLowerCase(); // Get file extension to identify the file type
     if (raw) {
         consola.info('Using raw mode. Formatting disabled.');  // Notify the user that raw mode is used
@@ -144,7 +144,17 @@ export async function serve(filename: string, raw: boolean) {
             }
 
             break;
-
+        case '.png':  // Handle PNG files
+        case '.jpg':  // Handle JPG files
+        case '.jpeg':  // Handle JPEG files
+        case '.gif':  // Handle GIF files
+        case '.svg':  // Handle SVG files
+        case '.webp':  // Handle WebP files
+        case '.ico':  // Handle ICO files
+        case '.bmp':  // Handle BMP files 
+        case '.tiff':  // Handle TIFF files
+            content = fs.readFileSync(filename);  // Read the file content as base64
+            break;
         default:  // Default case for all other file types
             content = fs.readFileSync(filename, 'utf8');  // Simply read the file content
     }
@@ -152,6 +162,9 @@ export async function serve(filename: string, raw: boolean) {
         app.get('/', (req: Request, res: Response) => {
             if (raw) {
                 res.setHeader('Content-Type', 'text/plain');  // Set the content type to plain text
+            }
+            if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.bmp', '.tiff'].includes(extension)) {
+                res.setHeader('Content-Type', 'image/' + extension.slice(1))
             } // Set the content type to HTM
             res.send(content);  // Serve the content
         });
@@ -286,6 +299,16 @@ export function getContentType(fileName: string): string {
             return 'text/css';
         case '.js':
             return 'application/javascript';
+        case '.png':  // Handle PNG files
+        case '.jpg':  // Handle JPG files
+        case '.jpeg':  // Handle JPEG files
+        case '.gif':  // Handle GIF files
+        case '.svg':  // Handle SVG files
+        case '.webp':  // Handle WebP files
+        case '.ico':  // Handle ICO files
+        case '.bmp':  // Handle BMP files 
+        case '.tiff':  // Handle TIFF files
+            return 'image/' + ext.slice(1);
         default:
             return 'text/plain';
     }
