@@ -67,13 +67,13 @@ export async function serve(filename: string, raw: boolean) {
                 `
                 consola.success('Markdown conversion done!');  // Log markdown conversion success
             } else {
-                content = fs.readFileSync(filename, 'utf8');  // Just read file content in raw mode
+                content = fs.readFileSync(filename);  // Just read file content in raw mode
             }
             break;
 
         case '.html':  // Handle HTML files
         case '.htm':
-            content = fs.readFileSync(filename, 'utf8');  // Read the HTML file content
+            content = fs.readFileSync(filename);  // Read the HTML file content
             break;
 
         case '.hw':  // Handle custom .hw (hostweb) files
@@ -140,32 +140,22 @@ export async function serve(filename: string, raw: boolean) {
                     }
                 });
             } else {
-                content = fs.readFileSync(filename, 'utf8');  // Simply read the file content
+                content = fs.readFileSync(filename);  // Simply read the file content
             }
-
             break;
-        case '.png':  // Handle PNG files
-        case '.jpg':  // Handle JPG files
-        case '.jpeg':  // Handle JPEG files
-        case '.gif':  // Handle GIF files
-        case '.svg':  // Handle SVG files
-        case '.webp':  // Handle WebP files
-        case '.ico':  // Handle ICO files
-        case '.bmp':  // Handle BMP files 
-        case '.tiff':  // Handle TIFF files
-            content = fs.readFileSync(filename);  // Read the file content as base64
-            break;
+    
         default:  // Default case for all other file types
-            content = fs.readFileSync(filename, 'utf8');  // Simply read the file content
+            content = fs.readFileSync(filename);  // Simply read the file content 
     }
+
     if (extension != '.hw' || (extension == '.hw' && raw)) {
+        let fileexts = JSON.parse(fs.readFileSync(path.resolve(path.join(path.dirname(__dirname), 'assets', 'json', 'fileext.json')), 'utf8')); 
         app.get('/', (req: Request, res: Response) => {
             if (raw) {
                 res.setHeader('Content-Type', 'text/plain');  // Set the content type to plain text
+            } else {
+                res.contentType(fileexts[extension] || 'text/plain');
             }
-            if (['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.bmp', '.tiff'].includes(extension)) {
-                res.setHeader('Content-Type', 'image/' + extension.slice(1))
-            } // Set the content type to HTM
             res.send(content);  // Serve the content
         });
     }
@@ -216,8 +206,8 @@ export async function create(projname: string) {
     fs.writeFileSync(path.join(projname, 'src','example-route',  'index.html'), '<h1>Hello World</h1>\n<p>This is example route</p>\n', 'utf8');
     fs.writeFileSync(path.join(projname, 'src','index.html'), '<h1>Hello World</h1>\n<p>This is homepage</p>\n', 'utf8');
     fs.writeFileSync(path.join(projname, 'src','.assets', 'style.css'), '/* This is an example stylesheet */\nbody { background-color: #f2f2f2; }', 'utf8');
-    fs.writeFileSync(path.join(projname, 'src','README.md'), `# ${projname}
-Welcome in ${projname} project!
+    fs.writeFileSync(path.join(projname, 'src','README.md'), `# ${projname == '.' ? path.basename(process.cwd()) : projname}
+Welcome in ${projname == '.' ? path.basename(process.cwd()) : projname} project!
 
 ## Useful commands
 
