@@ -1,6 +1,13 @@
 <center><img src="https://raw.githubusercontent.com/QwertyCodeQC/hostweb/refs/heads/main/hostweb-light.png" width="500"></center>
 <center><h1>HostWeb</h1></center>
 <center>Simple localhost server with presets</center>
+<br>
+<center>
+    <img src="https://img.shields.io/npm/d18m/hostweb" alt="NPM Downloads">
+    <img src="https://img.shields.io/npm/v/hostweb" alt="NPM Version">
+    <img src="https://img.shields.io/npm/l/hostweb" alt="License">
+    <img src="https://img.shields.io/npm/unpacked-size/hostweb" alt="NPM Unpacked Size">
+</center>
 
 ## About
 HostWeb was created to serve .html, .md, .png and other files you can imagine!
