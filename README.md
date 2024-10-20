@@ -77,6 +77,13 @@ type=classic ; Classic build
 usegzip=true ; Enable gzip (disable for debugging)
 minify=true ; Enable minification for files (it not affects visuals)
 ```
+# Upcoming: HostWeb 2
+- Introducing HWAPI - connection with frontend and backend
+- Styling for .md
+- Markdown support in presets
+- Watch mode
+- Enchanced CLI
+- and more!!
 
 <hr>
 
