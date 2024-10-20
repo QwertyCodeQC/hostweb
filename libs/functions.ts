@@ -1,3 +1,4 @@
+import asyncExitHook from 'async-exit-hook';
 import { Request, Response } from 'express';
 import fs from "fs";
 import path from "path";
@@ -15,7 +16,8 @@ import { createGunzip } from 'zlib';
 import temp from 'temp';
 import { promisify } from 'util';
 import { pipeline } from 'stream';
-
+import { HTMLElement, parse as parsehtml } from 'node-html-parser';
+import e from 'express';
 const __dirname = dirname(import.meta);
 const __filename = filename(import.meta);
 export async function serve(filename: string, raw: boolean) {
@@ -24,7 +26,7 @@ export async function serve(filename: string, raw: boolean) {
     if (raw) {
         consola.info('Using raw mode. Formatting disabled.');
     }
-    consola.start(`Invoking server for "${path.resolve(filename)}"...`);
+    consola.start(`Invoking server for "${path.resolve(filename)}"...\n`);
 
     // Sprawdzanie, czy plik istnieje
     if (!fs.existsSync(filename) || !fs.statSync(filename).isFile()) {
@@ -161,6 +163,31 @@ export async function serve(filename: string, raw: boolean) {
         });
     }
 
+    if (['.html', '.htm', '.md'].includes(extension)) {
+        const parsedHTML = parsehtml(content.toString());  //  Parsowanie zawartości HTML
+        const assets: any = [];
+        if (parsedHTML.querySelectorAll('img, script, link[rel="stylesheet"]').length > 0) {
+            consola.info('External assets detected! Serving to static server...');
+        }
+        // Zbieranie zasobów (obrazy, skrypty, style)
+        parsedHTML.querySelectorAll('img, script, link[rel="stylesheet"]').forEach((element: HTMLElement) => {
+            let srcAttr = element.getAttribute('src') || element.getAttribute('href');
+            if (srcAttr) {
+                const assetPath = path.join(path.dirname(filename), srcAttr);
+                if (fs.existsSync(assetPath)) {
+                    assets.push(assetPath);
+                }
+            }
+        });
+
+        // Serwowanie zasobów dynamicznie 
+        assets.forEach((asset: string) => {
+            app.get('/' + asset, (req: Request, res: Response) => {
+                res.send(fs.readFileSync(asset)); 
+            }); 
+        });
+    }
+
     // Uruchomienie serwera
     app.set('view engine', 'ejs');
     app.set('views', path.resolve(path.join(path.dirname(__dirname), 'htmls')));
@@ -169,12 +196,19 @@ export async function serve(filename: string, raw: boolean) {
         consola.info(`Serving file: ${chalk.green(filename)}`);
         consola.info(chalk.blue(`http://localhost:825`));
         consola.info(`Press ${chalk.green("Ctrl+C")} to stop...`);
+        asyncExitHook(async (done) => {
+            consola.info('Stopping server...');
+            server.close();
+            done();
+        });
+        
+        
     });
 
     app.use((req: Request, res: Response, next) => {
         res.set("X-Powered-By", "HostWeb");
         next();
-    });
+    }); 
 
     // Obsługa błędów 404
     app.use((req: Request, res: Response) => {

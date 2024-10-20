@@ -1,6 +1,6 @@
 {
   "name": "hostweb",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "Simple localhost server with presets",
   "main": "hostweb.js",
   "type": "module",
@@ -9,12 +9,13 @@
     "url": "git+https://github.com/QwertyCodeQC/hostweb.git"
   },
   "scripts": {
-    "test": "echo"
+    "test": "echo ."
   },
   "bin": {
     "hostweb": "hostweb.js"
   },
   "keywords": [
+    "hostweb",
     "localhost",
     "html",
     "express",
@@ -22,7 +23,10 @@
     "cli",
     "css",
     "front-end",
-    "host"
+    "host",
+    "framework",
+    "server",
+    "webserver"
   ],
   "author": "QwertyCodeQC",
   "license": "ISC",
@@ -32,6 +36,7 @@
     "#hostweb": "./hostweb.js"
   },
   "dependencies": {
+    "async-exit-hook": "^2.0.1",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "consola": "^3.2.3",
@@ -42,17 +47,18 @@
     "hostweb": "file:",
     "ini": "^5.0.0",
     "minify": "^11.4.1",
+    "node-html-parser": "^6.1.13",
     "showdown": "^2.1.0",
     "temp": "^0.9.4"
   },
   "devDependencies": {
+    "@types/async-exit-hook": "^2.0.2",
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.0",
     "@types/ini": "^4.1.1",
     "@types/minify": "^9.1.4",
     "@types/node": "^22.7.5",
     "@types/showdown": "^2.0.6",
-    "@types/temp": "^0.9.4",
-    "@types/try-to-catch": "^3.0.3"
+    "@types/temp": "^0.9.4"
   }
 }
