@@ -183,6 +183,7 @@ export async function serve(filename: string, raw: boolean) {
         // Serwowanie zasobów dynamicznie 
         assets.forEach((asset: string) => {
             app.get('/' + asset, (req: Request, res: Response) => {
+                res.contentType(getContentType(asset));
                 res.send(fs.readFileSync(asset)); 
             }); 
         });
