@@ -5,7 +5,7 @@
 <h1 align="center">HostWeb</h1>
 
 <p align="center">Simple localhost server with bundles</p>
-<span align="center"><a href="https://projects.qwerty.daxel.pl/hostweb">Docs</a> | <a href="https://npmjs.com/package/hostweb">NPM</a></span>
+<p align="center"><a href="https://projects.qwerty.daxel.pl/hostweb">Docs</a> | <a href="https://npmjs.com/package/hostweb">npm</a></p>
 
 <p align="center">
   <img src="https://img.shields.io/npm/d18m/hostweb" alt="NPM Downloads">
