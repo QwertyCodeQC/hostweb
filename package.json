@@ -1,6 +1,6 @@
 {
   "name": "hostweb",
-  "version": "1.1.10",
+  "version": "2.0.0",
   "description": "Simple localhost server with presets",
   "main": "hostweb.js",
   "type": "module",
@@ -17,11 +17,13 @@
   "keywords": [
     "hostweb",
     "localhost",
-    "html",
     "express",
     "web",
     "cli",
     "css",
+    "html",
+    "js",
+    "markdown",
     "front-end",
     "host",
     "framework",
@@ -37,19 +39,24 @@
   },
   "dependencies": {
     "async-exit-hook": "^2.0.1",
+    "babel-loader": "^9.2.1",
     "chalk": "^5.3.0",
+    "chokidar": "^4.0.1",
     "commander": "^12.1.0",
     "consola": "^3.2.3",
     "dirname-filename-esm": "^1.1.2",
     "ejs": "^3.1.10",
+    "eslint": "^9.13.0",
     "express": "^4.21.1",
     "glob": "^11.0.0",
     "hostweb": "file:",
     "ini": "^5.0.0",
+    "is-url-external": "^2.0.1",
     "minify": "^11.4.1",
     "node-html-parser": "^6.1.13",
     "showdown": "^2.1.0",
-    "temp": "^0.9.4"
+    "temp": "^0.9.4",
+    "webpack": "^5.95.0"
   },
   "devDependencies": {
     "@types/async-exit-hook": "^2.0.2",
@@ -59,6 +66,7 @@
     "@types/minify": "^9.1.4",
     "@types/node": "^22.7.5",
     "@types/showdown": "^2.0.6",
-    "@types/temp": "^0.9.4"
+    "@types/temp": "^0.9.4",
+    "@types/watchpack": "^2.4.4"
   }
 }

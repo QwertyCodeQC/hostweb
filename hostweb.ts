@@ -19,11 +19,12 @@ program
  
 
 program
-    .command("serve <filename>")
+    .command("serve [filename]")
     .description("Serve a .md, .html, .hw, or any other file")
     .option("-r, --raw", "Serve raw content (For example: do not format html or md)", false)
+    .option("-w, --watch", "Watch for changes and reload", false)
     .action((filename, options) => {
-        serve(filename, options.raw);
+        serve(filename, options.raw, options.watch);
     });
 
 program

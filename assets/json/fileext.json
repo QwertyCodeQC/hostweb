@@ -348,7 +348,7 @@
 	".man"			: "text/troff",
 	".mathml"		: "application/mathml+xml",
 	".mb"			: "application/mathematica",
-    ".md"           : "text/html",          
+    ".md"           : "text/html",
 	".mbk"			: "application/vnd.mobius.mbk",
 	".mbox"			: "application/mbox",
 	".mc1"			: "application/vnd.medcalcdata",

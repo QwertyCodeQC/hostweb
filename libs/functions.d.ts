@@ -1,0 +1,10 @@
+export declare function serve(_filename: string, raw: boolean, watch: boolean): Promise<void>;
+export declare function create(projname: string): Promise<void>;
+export declare function build(out: string, debug: boolean): Promise<void>;
+export declare function isGzipFile(filePath: string): boolean;
+export declare function decompressGzipFile(filePath: string, outPath: string): Promise<void>;
+export declare function getContentType(fileName: string): string;
+export declare function installPackage(packageName: string, location: string, savedev: boolean): Promise<unknown>;
+export declare function compileFile(filePath: string, debug: boolean): Promise<string>;
+export declare function convertMD(text: string, filename: string): string;
+export declare function transformHWACalls(code: string): string;
