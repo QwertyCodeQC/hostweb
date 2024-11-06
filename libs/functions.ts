@@ -566,7 +566,8 @@ export function convertMD(text: string, filename: string): string {
 
 
 export function transformHWACalls(code: string): string {
-    const regex = /hwa\.([a-zA-Z0-9_]+)\(([^)]*)\)/g;
+    // (yes i used chat gpt for it) 
+    const regex = /(?<!\/\/[^\n]*)(?<!\/\*[^]*?)\bhwa\.([a-zA-Z0-9_]+)\(([^)]*)\)/g;
     let match;
 
     while ((match = regex.exec(code)) !== null) {
@@ -575,33 +576,35 @@ export function transformHWACalls(code: string): string {
         
         const argsArray = argsString ? argsString.match(/[^,]+(?:\([^)]*\))?/g)?.map(arg => arg.trim()) ?? [] : [];
 
-        // Sprawdzenie, czy ostatni argument jest funkcją
         let hasCallback = false;
         let callback: any = argsArray[argsArray.length - 1];
         
         if (callback && (callback.startsWith("function") || callback.includes("=>"))) {
-            // Jeśli ostatni argument jest funkcją, przypisz go jako callback
             hasCallback = true;
             argsArray.pop();
         } else {
             callback = null;
         }
 
-        // Generowanie nazw argumentów jako arg0, arg1, ..., cb jeśli jest callback
         const args = argsArray.map((_, index) => `arg${index}`);
         if (hasCallback) {
             args.push('cb');
         }
 
-        // Generowanie wywołania fetch jako funkcji wyższego rzędu z argumentami i ewentualnym callbackiem (minifikowane)
         const functionArgs = args.join(', ');
-        const fetchCode = `(function(${functionArgs}){fetch(\`./_hwapi/${functionName}\`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify([${argsArray.join(', ')}])}).then(res=>res.ok?res.json():Promise.reject(\`HTTP error! status: \${res.status}\`)).then(data=>{if(data.error){console.error('[HWAPI] Function execution error:', data.error);} ${hasCallback ? 'cb' : '()=>{}'}(data.result,null)}).catch(err=>{console.error('Fetch error:', err); ${hasCallback ? 'cb' : '()=>{}'}(null,err);});})(${[...argsArray, hasCallback ? callback : ''].filter(arg => arg !== '').join(', ')})`;
+
+        // Ustal, czy mamy wywołać callback lub zostawić pustą funkcję
+        const successCallback = hasCallback ? 'cb' : '(result => {})';
+        const errorCallback = hasCallback ? 'cb' : '(error => {})';
+
+        const fetchCode = `(function(${functionArgs}){fetch(\`./_hwapi/${functionName}\`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify([${argsArray.join(', ')}])}).then(res=>res.ok?res.json():Promise.reject(\`HTTP error! status: \${res.status}\`)).then(data=>{if(data.error){console.error('[HWAPI] Function execution error:', data.error);} ${successCallback}(data.result,null)}).catch(err=>{console.error('Fetch error:', err); ${errorCallback}(null,err);});})(${[...argsArray, hasCallback ? callback : ''].filter(arg => arg !== '').join(', ')})`;
 
         code = code.replace(match[0], fetchCode);
     }
 
     return code;
 }
+
 
 
 

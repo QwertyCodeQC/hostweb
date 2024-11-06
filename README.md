@@ -22,10 +22,10 @@ It means that you can make whole website in just one file!
 
 ## Why HostWeb?
 - Easy to use - hostweb has been designed to be easy to use.
-- Fast - HostWeb use express to serve files fast as possible, just like this name!
+- Fast - HostWeb use express to serve files fast as possible, just like it's name!
 - Pre-configured - HostWeb is a pre-configured server, it means you don't have to set up anything.
-- front-back integration - HostWeb comes with HWAPI - connection with frontend and backend.
-- Irreplaceable in education - HostWeb is easy-to-use tool to learn how frameworks work and how to manage front-end and back-end, what is important in other technologies like
+- Front-back integration - HostWeb comes with HWAPI - connection with frontend and backend.
+- Irreplaceable in education - HostWeb an is easy-to-use tool to learn how frameworks work and how to manage front-end and back-end, what is important in other technologies like
 [electron](https://www.electronjs.org/).
 
 ## Installation
@@ -76,23 +76,22 @@ hostweb build -o dist --debug
 It looks like this
 
 ``` ini
-file=hostwebrc ; DO NOT CHANGE
+file=hostwebrc ; I DARE YOU DO NOT TOUCH IT
 
 [config]
-ignore[]=README.md ; Ignore files in src
+name=my-project ; name of project (used by hw compiler)
+usehwapi=true ; enable/disable hwapi (check next article to learn more)
+ignore[]=README.md ; ignore files in ./src
 
 [config.build]
-type=classic ; Classic build
-usegzip=true ; Enable gzip (disable for debugging)
-minify=true ; Enable minification for files (it not affects visuals)
+type=classic ; type of build (now only classic)
+usegzip=true ; enable/disable gzipping file (disable for debugging)
+minify=true ; minify files like html, js, css etc.
+parsemd=true ; parse md files (when you have md files it will parse it to html to view it in browser)
 ```
-# Upcoming: HostWeb 2
-- Introducing HWAPI - connection with frontend and backend
-- Styling for .md
-- Markdown support in presets
-- Watch mode
-- Enchanced CLI
-- and more!!
+
+Learn more at [docs](https://projects.qwerty.daxel.pl/hostweb).
+
 
 <hr>
 

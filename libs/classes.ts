@@ -73,6 +73,17 @@ class HWBuilder {
     }
 
     async createHWFile(projectDir: string, outputFilePath: string, excludeFolders: string[] = [], gzip: boolean, debug: boolean, doMinify: boolean, useHWAPI: boolean, parsemd: boolean): Promise<void> {
+        const validateProject = () => {
+            if (!fs.existsSync(projectDir)) {
+                consola.error(`Project directory not found: ${projectDir}`);
+                process.exit(0);
+            }
+            if (!fs.existsSync(path.join(projectDir, 'src'))) {
+                consola.error(`Project src directory not found: ${path.join(projectDir, 'src')}`);
+                process.exit(0);
+            }
+        }
+        validateProject();
         excludeFolders.push('_hwapi.js');
         if (debug) consola.debug('Creating filemap...');
         const srcDir = path.join(projectDir, 'src');  // Skupiamy się na katalogu 'src'
